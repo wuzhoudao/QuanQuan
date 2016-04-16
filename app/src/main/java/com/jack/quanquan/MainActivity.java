@@ -1,8 +1,17 @@
 package com.jack.quanquan;
 
 import android.app.Activity;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.widget.ImageView;
+import android.widget.TextView;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.HashMap;
 import java.util.Random;
 
@@ -32,15 +41,33 @@ public class MainActivity extends Activity {
             "http://img1.touxiang.cn/uploads/20130515/15-080722_514.jpg",
             "http://diy.qqjay.com/u2/2013/0401/4355c29b30d295b26da6f242a65bcaad.jpg"
     };
+    private String nickName;
+    private String avatar;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         SMSSDK.initSDK(this, APPKEY, APPSECRET);
+        registerUser("China","18815297416");
+//        start();
         setContentView(R.layout.activity_main);
-        start();
+        initView();
 
+    }
+
+    private void initView() {
+        TextView username = (TextView) findViewById(R.id.username);
+        final ImageView userimage = (ImageView) findViewById(R.id.image);
+        username.setText(nickName);
+        Thread t = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                userimage.setImageBitmap(getPicture(avatar));
+            }
+        });
+
+//        userimage.setImageURI(Uri.parse(avatar));
     }
 
     private void start() {
@@ -57,6 +84,7 @@ public class MainActivity extends Activity {
 
                     // 提交用户信息
                     registerUser(country, phone);
+                    initView();
                 }
             }
         });
@@ -68,8 +96,24 @@ public class MainActivity extends Activity {
         Random rnd = new Random();
         int id = Math.abs(rnd.nextInt());
         String uid = String.valueOf(id);
-        String nickName = "SmsSDK_User_" + uid;
-        String avatar = AVATARS[id % 12];
+        nickName = "SmsSDK_User_" + uid;
+        avatar = AVATARS[id % 12];
         SMSSDK.submitUserInfo(uid, nickName, avatar, country, phone);
+    }
+
+    public Bitmap getPicture(String path){
+        Bitmap bm=null;
+        try{
+            URL url=new URL(path);
+            URLConnection connection=url.openConnection();
+            connection.connect();
+            InputStream inputStream=connection.getInputStream();
+            bm= BitmapFactory.decodeStream(inputStream);
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return  bm;
     }
 }
